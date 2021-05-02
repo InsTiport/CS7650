@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from tqdm import tqdm
 from transformers import BartTokenizer, BartForQuestionAnswering, DistilBertTokenizerFast
 from torch.utils.data import DataLoader
 import argparse
@@ -154,7 +155,7 @@ train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 optim = AdamW(model.parameters(), lr=5e-5)
 
-for epoch in range(NUM_EPOCH):
+for epoch in tqdm(range(NUM_EPOCH)):
     for batch in train_loader:
         optim.zero_grad()
         input_ids = batch['input_ids'].to(device)
