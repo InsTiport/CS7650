@@ -1,11 +1,53 @@
-import os
 import json
-import torch
 from pathlib import Path
 from transformers import BartTokenizer, BartForQuestionAnswering, DistilBertTokenizerFast
 from torch.utils.data import DataLoader
+import argparse
 from transformers import AdamW
+import torch
+import numpy as np
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
 from dataset import SquadDataset
+
+# setup args
+arg_parser = argparse.ArgumentParser()
+
+arg_parser.add_argument(
+    '--gpu',
+    type=int,
+    default=0,
+    help=f'Specify which gpu to use'
+)
+
+arg_parser.add_argument(
+    '-e', '--epoch',
+    type=int,
+    default=5,
+    help=f'Specify number of training epochs'
+)
+arg_parser.add_argument(
+    '-b', '--batch',
+    type=int,
+    default=2,
+    help=f'Specify batch size'
+)
+args = arg_parser.parse_args()
+
+'''
+hyper-parameter 
+'''
+DEVICE_ID = args.gpu  # adjust this to use an unoccupied GPU
+BATCH_SIZE = args.batch
+NUM_EPOCH = args.epoch
+
+'''
+control and logging
+'''
+# control randomness
+torch.manual_seed(0)
+np.random.seed(0)
 
 
 def read_squad(path):
@@ -108,11 +150,11 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 model.to(device)
 model.train()
 
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 optim = AdamW(model.parameters(), lr=5e-5)
 
-for epoch in range(3):
+for epoch in range(NUM_EPOCH):
     for batch in train_loader:
         optim.zero_grad()
         input_ids = batch['input_ids'].to(device)
