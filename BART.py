@@ -140,15 +140,16 @@ add_token_positions(train_encodings, bert_train_encodings, train_answers)
 add_token_positions(val_encodings, bert_val_encodings, val_answers)
 
 
-'''
-Torch dataset object
-'''
-train_dataset = SquadDataset(train_encodings)
-val_dataset = SquadDataset(val_encodings)
-
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 if device == 'cuda':
     torch.cuda.set_device(DEVICE_ID)  # use an unoccupied GPU
+
+'''
+Torch dataset object
+'''
+train_dataset = SquadDataset(train_encodings, device)
+val_dataset = SquadDataset(val_encodings, device)
+
 model.to(device)
 model.train()
 
