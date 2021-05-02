@@ -101,6 +101,8 @@ def add_token_positions(encodings, bert_encodings, answers):
             start_pos[-1] = bart_tokenizer.model_max_length
         if end_pos[-1] is None:
             end_pos[-1] = bert_encodings.char_to_token(i, answers[i]['answer_end'] + 1)
+        if end_pos[-1] is None:
+            end_pos[-1] = bert_encodings.char_to_token(i, answers[i]['answer_end'] - 1)
 
     encodings.update({'start_positions': start_pos, 'end_positions': end_pos})
 
