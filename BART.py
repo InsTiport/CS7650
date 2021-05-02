@@ -173,7 +173,7 @@ for epoch in range(NUM_EPOCH):
         loss.backward()
         optim.step()
 
-    os.mkdir('model_weights', exist_ok=True)
+    os.makedirs(os.path.dirname('model_weights' + '/'), exist_ok=True)
     SAVE_PATH = os.path.join('model_weights', f'BART_epoch_{epoch+1}.pt')
     # save model after training for one epoch
     torch.save(model.state_dict(), SAVE_PATH)
