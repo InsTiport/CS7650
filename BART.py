@@ -146,8 +146,9 @@ Torch dataset object
 train_dataset = SquadDataset(train_encodings)
 val_dataset = SquadDataset(val_encodings)
 
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cuda':
+    torch.cuda.set_device(DEVICE_ID)  # use an unoccupied GPU
 model.to(device)
 model.train()
 
@@ -155,8 +156,8 @@ train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 optim = AdamW(model.parameters(), lr=5e-5)
 
-for epoch in tqdm(range(NUM_EPOCH)):
-    for batch in train_loader:
+for epoch in range(NUM_EPOCH):
+    for batch in tqdm(train_loader):
         optim.zero_grad()
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
@@ -172,6 +173,7 @@ for epoch in tqdm(range(NUM_EPOCH)):
         loss.backward()
         optim.step()
 
+    os.mkdir('model_weights', exist_ok=True)
     SAVE_PATH = os.path.join('model_weights', f'BART_epoch_{epoch+1}.pt')
     # save model after training for one epoch
     torch.save(model.state_dict(), SAVE_PATH)
