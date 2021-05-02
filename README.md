@@ -4,7 +4,7 @@ Project repo for CS 7650
 ### Training BART
 
 ```python
-python train_BART.py -e [epoch] -b [batch size]
+python BART.py -e [epoch] -b [batch size]
 ```
 
 Arguments:
