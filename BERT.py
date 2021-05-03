@@ -101,6 +101,10 @@ def add_token_positions(encodings, bert_encodings, answers):
             start_pos[-1] = bert_tokenizer.model_max_length
         if end_pos[-1] is None:
             end_pos[-1] = bert_encodings.char_to_token(i, answers[i]['answer_end'] + 1)
+        if end_pos[-1] is None:
+            end_pos[-1] = bert_encodings.char_to_token(i, answers[i]['answer_end'] - 1)
+        if end_pos[-1] is None:
+            end_pos[-1] = bert_tokenizer.model_max_length
 
     encodings.update({'start_positions': start_pos, 'end_positions': end_pos})
 
@@ -121,7 +125,7 @@ add_end_idx(val_answers, val_contexts)
 tokenizers and models
 '''
 bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-#bert_tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
+distil_bert_tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
 model = BertForQuestionAnswering.from_pretrained('bert-base-uncased')
 
 '''
@@ -129,24 +133,25 @@ tokenize
 '''
 train_encodings = bert_tokenizer(train_contexts, train_questions, truncation=True, padding=True)
 val_encodings = bert_tokenizer(val_contexts, val_questions, truncation=True, padding=True)
-bert_train_encodings = bert_tokenizer(train_contexts, train_questions, truncation=True, padding=True)
-bert_val_encodings = bert_tokenizer(val_contexts, val_questions, truncation=True, padding=True)
-
+distil_bert_train_encodings = distil_bert_tokenizer(train_contexts, train_questions, truncation=True, padding=True)
+distil_bert_val_encodings = distil_bert_tokenizer(val_contexts, val_questions, truncation=True, padding=True)
 
 '''
 last step preparing model inputs
 '''
-add_token_positions(train_encodings, bert_train_encodings, train_answers)
-add_token_positions(val_encodings, bert_val_encodings, val_answers)
+add_token_positions(train_encodings, distil_bert_train_encodings, train_answers)
+add_token_positions(val_encodings, distil_bert_val_encodings, val_answers)
 
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cuda':
+    torch.cuda.set_device(DEVICE_ID)  # use an unoccupied GPU
 
 '''
 Torch dataset object
 '''
-train_dataset = SquadDataset(train_encodings)
-val_dataset = SquadDataset(val_encodings)
-
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+train_dataset = SquadDataset(train_encodings, device)
+val_dataset = SquadDataset(val_encodings, device)
 
 model.to(device)
 model.train()
@@ -155,8 +160,8 @@ train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 optim = AdamW(model.parameters(), lr=5e-5)
 
-for epoch in tqdm(range(NUM_EPOCH)):
-    for batch in train_loader:
+for epoch in range(NUM_EPOCH):
+    for batch in tqdm(train_loader):
         optim.zero_grad()
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
@@ -172,6 +177,7 @@ for epoch in tqdm(range(NUM_EPOCH)):
         loss.backward()
         optim.step()
 
-    SAVE_PATH = os.path.join('model_weights', f'BERT_epoch_{epoch+1}.pt')
+    os.makedirs(os.path.dirname('model_weights' + '/'), exist_ok=True)
+    SAVE_PATH = os.path.join('model_weights', f'BART_epoch_{epoch+1}.pt')
     # save model after training for one epoch
     torch.save(model.state_dict(), SAVE_PATH)
