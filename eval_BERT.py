@@ -92,7 +92,7 @@ val_encodings['id'] = val_ids
 '''
 Torch dataset object
 '''
-val_dataset = SquadDataset(val_encodings, device)
+val_dataset = SquadDataset(val_encodings, device, eval=True)
 
 res = dict()
 with torch.no_grad():
