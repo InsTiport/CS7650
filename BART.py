@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from tqdm import tqdm
-from transformers import BartTokenizer, BartForQuestionAnswering, DistilBertTokenizerFast
+from transformers import BartTokenizerFast, BartForQuestionAnswering
 from torch.utils.data import DataLoader
 import argparse
 from transformers import AdamW
@@ -94,22 +94,22 @@ def add_end_idx(answers, contexts):
             answer['answer_end'] = end_idx - 2     # When the gold label is off by two characters
 
 
-def add_token_positions(encodings, bert_encodings, answers):
+def add_token_positions(encodings, answers):
     start_pos = []
     end_pos = []
     for i in range(len(answers)):
-        start_pos.append(bert_encodings.char_to_token(i, answers[i]['answer_start']))
-        end_pos.append(bert_encodings.char_to_token(i, answers[i]['answer_end']))
+        start_pos.append(encodings.char_to_token(i, answers[i]['answer_start']))
+        end_pos.append(encodings.char_to_token(i, answers[i]['answer_end']))
 
         # if start position is None, the answer passage has been truncated
         if start_pos[-1] is None:
-            start_pos[-1] = bart_tokenizer.model_max_length
+            start_pos[-1] = tokenizer.model_max_length
         if end_pos[-1] is None:
-            end_pos[-1] = bert_encodings.char_to_token(i, answers[i]['answer_end'] + 1)
+            end_pos[-1] = encodings.char_to_token(i, answers[i]['answer_end'] + 1)
         if end_pos[-1] is None:
-            end_pos[-1] = bert_encodings.char_to_token(i, answers[i]['answer_end'] - 1)
+            end_pos[-1] = encodings.char_to_token(i, answers[i]['answer_end'] - 1)
         if end_pos[-1] is None:
-            end_pos[-1] = bart_tokenizer.model_max_length
+            end_pos[-1] = tokenizer.model_max_length
 
     encodings.update({'start_positions': start_pos, 'end_positions': end_pos})
 
@@ -129,24 +129,21 @@ add_end_idx(val_answers, val_contexts)
 '''
 tokenizers and models
 '''
-bart_tokenizer = BartTokenizer.from_pretrained('facebook/bart-base')
-bert_tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
+tokenizer = BartTokenizerFast.from_pretrained('facebook/bart-base')
 model = BartForQuestionAnswering.from_pretrained('facebook/bart-base')
 
 '''
 tokenize
 '''
-train_encodings = bart_tokenizer(train_contexts, train_questions, truncation=True, padding=True)
-val_encodings = bart_tokenizer(val_contexts, val_questions, truncation=True, padding=True)
-bert_train_encodings = bert_tokenizer(train_contexts, train_questions, truncation=True, padding=True)
-bert_val_encodings = bert_tokenizer(val_contexts, val_questions, truncation=True, padding=True)
+train_encodings = tokenizer(train_contexts, train_questions, truncation=True, padding=True)
+val_encodings = tokenizer(val_contexts, val_questions, truncation=True, padding=True)
 
 
 '''
 last step preparing model inputs
 '''
-add_token_positions(train_encodings, bert_train_encodings, train_answers)
-add_token_positions(val_encodings, bert_val_encodings, val_answers)
+add_token_positions(train_encodings, train_answers)
+add_token_positions(val_encodings, val_answers)
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'

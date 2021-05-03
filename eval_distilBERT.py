@@ -76,9 +76,9 @@ val_contexts, val_questions, val_ids = read_squad('data/dev-v2.0.json')
 '''
 tokenizers and models
 '''
-bert_tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
+tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
 model = DistilBertForQuestionAnswering.from_pretrained('distilbert-base-uncased').to(device)
-model.load_state_dict(torch.load(os.path.join('model_weights', f'BERT_epoch_{NUM_EPOCH}.pt'), map_location=device))
+model.load_state_dict(torch.load(os.path.join('model_weights', f'distilBERT_epoch_{NUM_EPOCH}.pt'), map_location=device))
 
 model.eval()
 
@@ -86,7 +86,7 @@ model.eval()
 res = dict()
 with torch.no_grad():
     for i, (context, question, id) in tqdm(enumerate(zip(val_contexts, val_questions, val_ids))):
-        encoding = bert_tokenizer(context, question, return_tensors='pt')
+        encoding = tokenizer(context, question, return_tensors='pt')
         inputs = encoding['input_ids'].to(device)
 
         try:
