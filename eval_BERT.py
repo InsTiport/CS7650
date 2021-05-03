@@ -8,7 +8,6 @@ import numpy as np
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-from dataset import SquadDataset
 
 # setup args
 arg_parser = argparse.ArgumentParser()
@@ -83,34 +82,21 @@ model.load_state_dict(torch.load(os.path.join('model_weights', f'BERT_epoch_{NUM
 
 model.eval()
 
-'''
-tokenize
-'''
-val_encodings = bert_tokenizer(val_contexts, val_questions, truncation=True, padding=True)
-val_encodings['id'] = val_ids
-
-'''
-Torch dataset object
-'''
-val_dataset = SquadDataset(val_encodings, device, eval=True)
 
 res = dict()
 with torch.no_grad():
-    for i in tqdm(range(len(val_dataset))):
-        id = val_dataset[i]['id']
-        input_id = val_dataset[i]['input_ids'].to(device)
-        attention_mask = val_dataset[i]['attention_mask'].to(device)
-        output = model(
-            input_id,
-            attention_mask=attention_mask
-        )
+    for i, (context, question, id) in tqdm(enumerate(zip(val_contexts, val_questions, val_ids))):
+        encoding = bert_tokenizer(context, question, return_tensors='pt')
+        inputs = encoding['input_ids'].to(device)
+
+        output = model(inputs)
 
         start_logits = output.start_logits
         end_logits = output.end_logits
         start_pos = start_logits.argmax(dim=-1)
         end_pos = end_logits.argmax(dim=-1)
 
-        res[id] = val_contexts[i][start_pos:end_pos]
+        res[id] = context[start_pos:end_pos]
 
 with open('res.json', 'w') as write_file:
     json.dump(res, write_file)
