@@ -64,10 +64,15 @@ def read_squad(path):
             context = passage['context']
             for qa in passage['qas']:
                 question = qa['question']
-                for answer in qa['answers']:
+                if qa['is_impossible']:
                     contexts.append(context)
                     questions.append(question)
-                    answers.append(answer)
+                    answers.append({'text': '', 'answer_start': 0})
+                else:
+                    for answer in qa['answers']:
+                        contexts.append(context)
+                        questions.append(question)
+                        answers.append(answer)
 
     return contexts, questions, answers
 
