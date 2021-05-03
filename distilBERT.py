@@ -105,9 +105,9 @@ def add_token_positions(encodings, answers):
         if start_pos[-1] is None:
             start_pos[-1] = tokenizer.model_max_length
         if end_pos[-1] is None:
-            end_pos[-1] = tokenizer.char_to_token(i, answers[i]['answer_end'] + 1)
+            end_pos[-1] = encodings.char_to_token(i, answers[i]['answer_end'] + 1)
         if end_pos[-1] is None:
-            end_pos[-1] = tokenizer.char_to_token(i, answers[i]['answer_end'] - 1)
+            end_pos[-1] = encodings.char_to_token(i, answers[i]['answer_end'] - 1)
         if end_pos[-1] is None:
             end_pos[-1] = tokenizer.model_max_length
 
