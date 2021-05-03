@@ -1,10 +1,8 @@
 import json
 from pathlib import Path
 from tqdm import tqdm
-from transformers import BertTokenizer, BertForQuestionAnswering, DistilBertTokenizerFast
-from torch.utils.data import DataLoader
+from transformers import BertTokenizer, BertForQuestionAnswering
 import argparse
-from transformers import AdamW
 import torch
 import numpy as np
 import os
@@ -22,13 +20,19 @@ arg_parser.add_argument(
     help=f'Specify which gpu to use'
 )
 
+arg_parser.add_argument(
+    '-e', '--epoch',
+    type=int,
+    default=5,
+    help=f'Specify number of training epochs'
+)
+
 args = arg_parser.parse_args()
 
 '''
 hyper-parameter 
 '''
 DEVICE_ID = args.gpu  # adjust this to use an unoccupied GPU
-BATCH_SIZE = args.batch
 NUM_EPOCH = args.epoch
 
 '''
@@ -75,7 +79,7 @@ tokenizers and models
 '''
 bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertForQuestionAnswering.from_pretrained('bert-base-uncased').to(device)
-model.load_state_dict(torch.load(os.path.join('model_weights', 'BERT_epoch_3.pt'), map_location=device))
+model.load_state_dict(torch.load(os.path.join('model_weights', f'BERT_epoch_{NUM_EPOCH}.pt'), map_location=device))
 
 model.eval()
 
@@ -106,7 +110,7 @@ with torch.no_grad():
         start_pos = start_logits.argmax(dim=-1)
         end_pos = end_logits.argmax(dim=-1)
 
-        res[id] = val_contexts[start_pos:end_pos]
+        res[id] = val_contexts[i][start_pos:end_pos]
 
-with open("res.json", "w") as write_file:
+with open('res.json', 'w') as write_file:
     json.dump(res, write_file)
