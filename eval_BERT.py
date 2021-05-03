@@ -22,18 +22,6 @@ arg_parser.add_argument(
     help=f'Specify which gpu to use'
 )
 
-arg_parser.add_argument(
-    '-e', '--epoch',
-    type=int,
-    default=5,
-    help=f'Specify number of training epochs'
-)
-arg_parser.add_argument(
-    '-b', '--batch',
-    type=int,
-    default=2,
-    help=f'Specify batch size'
-)
 args = arg_parser.parse_args()
 
 '''
