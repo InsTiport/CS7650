@@ -89,14 +89,17 @@ with torch.no_grad():
         encoding = bert_tokenizer(context, question, return_tensors='pt')
         inputs = encoding['input_ids'].to(device)
 
-        output = model(inputs)
+        try:
+            output = model(inputs)
 
-        start_logits = output.start_logits
-        end_logits = output.end_logits
-        start_pos = start_logits.argmax(dim=-1)
-        end_pos = end_logits.argmax(dim=-1)
+            start_logits = output.start_logits
+            end_logits = output.end_logits
+            start_pos = start_logits.argmax(dim=-1)
+            end_pos = end_logits.argmax(dim=-1)
 
-        res[id] = context[start_pos:end_pos]
+            res[id] = context[start_pos:end_pos]
+        except RuntimeError:
+            res[id] = ''
 
 with open('res.json', 'w') as write_file:
     json.dump(res, write_file)
