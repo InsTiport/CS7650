@@ -101,5 +101,5 @@ with torch.no_grad():
         except RuntimeError:
             res[id] = ''
 
-with open('res.json', 'w') as write_file:
+with open('BART_res.json', 'w') as write_file:
     json.dump(res, write_file)

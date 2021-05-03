@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from tqdm import tqdm
-from transformers import BertTokenizer, BertForQuestionAnswering
+from transformers import DistilBertTokenizerFast, DistilBertForQuestionAnswering
 import argparse
 import torch
 import numpy as np
@@ -76,8 +76,8 @@ val_contexts, val_questions, val_ids = read_squad('data/dev-v2.0.json')
 '''
 tokenizers and models
 '''
-bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertForQuestionAnswering.from_pretrained('bert-base-uncased').to(device)
+bert_tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
+model = DistilBertForQuestionAnswering.from_pretrained('distilbert-base-uncased').to(device)
 model.load_state_dict(torch.load(os.path.join('model_weights', f'BERT_epoch_{NUM_EPOCH}.pt'), map_location=device))
 
 model.eval()
@@ -101,5 +101,5 @@ with torch.no_grad():
         except RuntimeError:
             res[id] = ''
 
-with open('BERT_res.json', 'w') as write_file:
+with open('distilBERT_res.json', 'w') as write_file:
     json.dump(res, write_file)
