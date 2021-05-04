@@ -86,20 +86,17 @@ model.eval()
 res = dict()
 with torch.no_grad():
     for i, (context, question, id) in tqdm(enumerate(zip(val_contexts, val_questions, val_ids))):
-        encoding = tokenizer(context, question, return_tensors='pt')
+        encoding = tokenizer(context, question, return_tensors='pt', truncation=True)
         inputs = encoding['input_ids'].to(device)
 
-        try:
-            output = model(inputs)
+        output = model(inputs)
 
-            start_logits = output.start_logits
-            end_logits = output.end_logits
-            start_pos = start_logits.argmax(dim=-1)
-            end_pos = end_logits.argmax(dim=-1)
+        start_logits = output.start_logits
+        end_logits = output.end_logits
+        start_pos = start_logits.argmax(dim=-1)
+        end_pos = end_logits.argmax(dim=-1)
 
-            res[id] = context[start_pos:end_pos]
-        except RuntimeError:
-            res[id] = ''
+        res[id] = tokenizer.decode(inputs[0][start_pos:end_pos])
 
 with open('distilBERT_res.json', 'w') as write_file:
     json.dump(res, write_file)

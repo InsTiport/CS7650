@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from tqdm import tqdm
-from transformers import BertTokenizer, BertForQuestionAnswering
+from transformers import BertTokenizerFast, BertForQuestionAnswering
 import argparse
 import torch
 import numpy as np
@@ -76,7 +76,7 @@ val_contexts, val_questions, val_ids = read_squad('data/dev-v2.0.json')
 '''
 tokenizers and models
 '''
-bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 model = BertForQuestionAnswering.from_pretrained('bert-base-uncased').to(device)
 model.load_state_dict(torch.load(os.path.join('model_weights', f'BERT_epoch_{NUM_EPOCH}.pt'), map_location=device))
 
@@ -86,20 +86,17 @@ model.eval()
 res = dict()
 with torch.no_grad():
     for i, (context, question, id) in tqdm(enumerate(zip(val_contexts, val_questions, val_ids))):
-        encoding = bert_tokenizer(context, question, return_tensors='pt')
+        encoding = tokenizer(context, question, return_tensors='pt', truncation=True)
         inputs = encoding['input_ids'].to(device)
 
-        try:
-            output = model(inputs)
+        output = model(inputs)
 
-            start_logits = output.start_logits
-            end_logits = output.end_logits
-            start_pos = start_logits.argmax(dim=-1)
-            end_pos = end_logits.argmax(dim=-1)
+        start_logits = output.start_logits
+        end_logits = output.end_logits
+        start_pos = start_logits.argmax(dim=-1)
+        end_pos = end_logits.argmax(dim=-1)
 
-            res[id] = context[start_pos:end_pos]
-        except RuntimeError:
-            res[id] = ''
+        res[id] = tokenizer.decode(inputs[0][start_pos:end_pos])
 
 with open('BERT_res.json', 'w') as write_file:
     json.dump(res, write_file)
