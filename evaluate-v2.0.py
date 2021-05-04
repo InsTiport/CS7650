@@ -18,8 +18,8 @@ OPTS = None
 
 def parse_args():
   parser = argparse.ArgumentParser('Official evaluation script for SQuAD version 2.0.')
-  parser.add_argument('data_file', metavar='data/dev-v2.0.json', help='Input data JSON file.')
-  parser.add_argument('pred_file', metavar='res.json', help='Model predictions.')
+  parser.add_argument('data_file', metavar='data.json', help='Input data JSON file.')
+  parser.add_argument('pred_file', metavar='pred.json', help='Model predictions.')
   parser.add_argument('--out-file', '-o', metavar='eval.json',
                       help='Write accuracy metrics to file (default is stdout).')
   parser.add_argument('--na-prob-file', '-n', metavar='na_prob.json',
@@ -113,16 +113,16 @@ def make_eval_dict(exact_scores, f1_scores, qid_list=None):
   if not qid_list:
     total = len(exact_scores)
     return collections.OrderedDict([
-        ('exact', 100.0 * sum(exact_scores.values()) / total),
-        ('f1', 100.0 * sum(f1_scores.values()) / total),
-        ('total', total),
+      ('exact', 100.0 * sum(exact_scores.values()) / total),
+      ('f1', 100.0 * sum(f1_scores.values()) / total),
+      ('total', total),
     ])
   else:
     total = len(qid_list)
     return collections.OrderedDict([
-        ('exact', 100.0 * sum(exact_scores[k] for k in qid_list) / total),
-        ('f1', 100.0 * sum(f1_scores[k] for k in qid_list) / total),
-        ('total', total),
+      ('exact', 100.0 * sum(exact_scores[k] for k in qid_list) / total),
+      ('f1', 100.0 * sum(f1_scores[k] for k in qid_list) / total),
+      ('total', total),
     ])
 
 def merge_eval(main_eval, new_eval, prefix):
@@ -163,7 +163,7 @@ def make_precision_recall_eval(scores, na_probs, num_true_pos, qid_to_has_ans,
     plot_pr_curve(precisions, recalls, out_image, title)
   return {'ap': 100.0 * avg_prec}
 
-def run_precision_recall_analysis(main_eval, exact_raw, f1_raw, na_probs, 
+def run_precision_recall_analysis(main_eval, exact_raw, f1_raw, na_probs,
                                   qid_to_has_ans, out_image_dir):
   if out_image_dir and not os.path.exists(out_image_dir):
     os.makedirs(out_image_dir)
@@ -171,18 +171,18 @@ def run_precision_recall_analysis(main_eval, exact_raw, f1_raw, na_probs,
   if num_true_pos == 0:
     return
   pr_exact = make_precision_recall_eval(
-      exact_raw, na_probs, num_true_pos, qid_to_has_ans,
-      out_image=os.path.join(out_image_dir, 'pr_exact.png'),
-      title='Precision-Recall curve for Exact Match score')
+    exact_raw, na_probs, num_true_pos, qid_to_has_ans,
+    out_image=os.path.join(out_image_dir, 'pr_exact.png'),
+    title='Precision-Recall curve for Exact Match score')
   pr_f1 = make_precision_recall_eval(
-      f1_raw, na_probs, num_true_pos, qid_to_has_ans,
-      out_image=os.path.join(out_image_dir, 'pr_f1.png'),
-      title='Precision-Recall curve for F1 score')
+    f1_raw, na_probs, num_true_pos, qid_to_has_ans,
+    out_image=os.path.join(out_image_dir, 'pr_f1.png'),
+    title='Precision-Recall curve for F1 score')
   oracle_scores = {k: float(v) for k, v in qid_to_has_ans.items()}
   pr_oracle = make_precision_recall_eval(
-      oracle_scores, na_probs, num_true_pos, qid_to_has_ans,
-      out_image=os.path.join(out_image_dir, 'pr_oracle.png'),
-      title='Oracle Precision-Recall curve (binary task of HasAns vs. NoAns)')
+    oracle_scores, na_probs, num_true_pos, qid_to_has_ans,
+    out_image=os.path.join(out_image_dir, 'pr_oracle.png'),
+    title='Oracle Precision-Recall curve (binary task of HasAns vs. NoAns)')
   merge_eval(main_eval, pr_exact, 'pr_exact')
   merge_eval(main_eval, pr_f1, 'pr_f1')
   merge_eval(main_eval, pr_oracle, 'pr_oracle')
@@ -257,7 +257,7 @@ def main():
   if OPTS.na_prob_file:
     find_all_best_thresh(out_eval, preds, exact_raw, f1_raw, na_probs, qid_to_has_ans)
   if OPTS.na_prob_file and OPTS.out_image_dir:
-    run_precision_recall_analysis(out_eval, exact_raw, f1_raw, na_probs, 
+    run_precision_recall_analysis(out_eval, exact_raw, f1_raw, na_probs,
                                   qid_to_has_ans, OPTS.out_image_dir)
     histogram_na_prob(na_probs, has_ans_qids, OPTS.out_image_dir, 'hasAns')
     histogram_na_prob(na_probs, no_ans_qids, OPTS.out_image_dir, 'noAns')
@@ -272,6 +272,5 @@ if __name__ == '__main__':
   if OPTS.out_image_dir:
     import matplotlib
     matplotlib.use('Agg')
-    import matplotlib.pyplot as plt 
+    import matplotlib.pyplot as plt
   main()
-
